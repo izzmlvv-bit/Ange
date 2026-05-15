@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ange - Результаты поиска</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+         /* Дополнительные стили для страницы поиска */
+        #resultsCount {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .no-results {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 60px 20px;
+            background: #f9f9f9;
+            border-radius: 12px;
+        }
+        .no-results p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .no-results .suggestions {
+            font-size: 14px;
+            color: #999;
+        }
+        .search-highlight {
+            background-color: #fff0ef;
+            padding: 2px 4px;
+            border-radius: 4px;
+            color: #c9302c;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="container">
+        <a href="index.html" class="logo" style="text-decoration: none; color: inherit;">Главная</a>
+        <nav class="nav">
+            <div class="search-wrapper">
+                <input type="text" placeholder="Поиск..." class="search-input" id="searchInput">
+                <button class="search-btn" id="searchBtn"><img src="images/лупа.png" alt=""></button>
+            </div>
+            <a href="#">Каталог</a>
+            <a href="newpage.html" class="sale">Sale</a>
+            <a href="#">Коллекции</a>
+            <a href="#">Новинки</a>
+            <a href="#">Вход</a>
+            <a href="korzina.html"><img src="images/Корзина.png" alt=""></a>
+        </nav>
+    </div>
+</header>
+
+<section class="hero">
+    <img src="images/шапка 1.jpg" alt="Жемчуг">
+</section>
+
+<main class="container">
+    <h2>Результаты поиска по запросу: <span id="searchQuery"></span></h2>
+    <p id="resultsCount"></p>
+    <div class="product-grid" id="searchResults">
+        <!-- Здесь будут отображаться результаты поиска -->
+    </div>
+</main>
+
+<script>
+    // ===== РАСШИРЕННАЯ БАЗА ДАННЫХ ТОВАРОВ (с описаниями) =====
+    const products = [
+        { 
+            name: "Колье из серебра", 
+            price: "2 590 ₽", 
+            image: "images/1.jpg", 
+            url: "pr-card1.html", 
+            description: "Изысканное колье из серебра 925 пробы с фианитами. Подходит для повседневной носки и торжественных мероприятий.",
+            keywords: ["колье", "серебро", "фианит", "цепочка", "подвеска", "украшение на шею"]
+        },
+        { 
+            name: "Серьги из серебра с жемчугом", 
+            price: "5 999 ₽", 
+            image: "images/2.jpg", 
+            url: "pr-card2.html", 
+            description: "Элегантные серьги с натуральным жемчугом. Изделие выполнено из серебра 925 пробы. Жемчуг – символ женственности и чистоты.",
+            keywords: ["серьги", "серебро", "жемчуг", "серьги гвоздики", "женственность"]
+        },
+        { 
+            name: "Кольцо из серебра", 
+            price: "1 350 ₽", 
+            image: "images/3.jpg", 
+            url: "pr-card3.html", 
+            description: "Изысканное кольцо из серебра 925 пробы с фианитами. Благородный блеск серебра и сияние фианитов высшей огранки.",
+            keywords: ["кольцо", "серебро", "фианит", "обручальное", "подарок"]
+        },
+        { 
+            name: "Подвеска из серебра с жемчугом", 
+            price: "2 860 ₽", 
+            image: "images/4.jpg", 
+            url: "pr-card4.html", 
+            description: "Нежная подвеска из серебра 925 пробы с натуральным жемчугом и фианитами. Сочетает природное сияние жемчуга и чистоту фианита.",
+            keywords: ["подвеска", "серебро", "жемчуг", "фианит", "кулон", "на цепочку"]
+        },
+        { 
+            name: "Серьги из белого золота с сапфирами", 
+            price: "87 990 ₽", 
+            image: "images/5.jpg", 
+            url: "pr-card5.html", 
+            description: "Роскошные серьги из белого золота 585 пробы с натуральными сапфирами. Сапфиры — драгоценные камни первого порядка.",
+            keywords: ["серьги", "золото", "белое золото", "сапфир", "драгоценные", "премиум"]
+        },
+        { 
+            name: "Колье из золота с рубином", 
+            price: "29 990 ₽", 
+            image: "images/6.jpg", 
+            url: "pr-card6.html", 
+            description: "Роскошное колье из золота 585 пробы с натуральным рубином. Рубин — камень любви, энергии и победы.",
+            keywords: ["колье", "золото", "рубин", "красное золото", "драгоценный"]
+        },
+        { 
+            name: "Кольцо с топазом", 
+            price: "2 790 ₽", 
+            image: "images/7.jpg", 
+            url: "pr-card7.html", 
+            description: "Изысканное кольцо из серебра 925 пробы с натуральным топазом. Камень небесно-голубого цвета символизирует гармонию.",
+            keywords: ["кольцо", "топаз", "голубой", "серебро", "небо"]
+        },
+        { 
+            name: "Брошь из золота с жемчугом и фианитами", 
+            price: "27 990 ₽", 
+            image: "images/8.jpg", 
+            url: "pr-card8.html", 
+            description: "Изысканная брошь из золота 585 пробы с натуральным жемчугом и фианитами. Украсит лацкан пиджака, воротник блузы или платье.",
+            keywords: ["брошь", "золото", "жемчуг", "фианит", "аксессуар", "булавка"]
+        },
+        // Товары с распродажи
+        { 
+            name: "Кольцо из серебра (скидка)", 
+            price: "720 ₽", 
+            image: "images/12.jpg", 
+            url: "pr-card9.html", 
+            description: "Лаконичное кольцо из серебра 925 пробы. Гладкая полированная поверхность создаёт мягкий благородный блеск.",
+            keywords: ["кольцо", "серебро", "гладкое", "минимализм", "база"]
+        },
+        { 
+            name: "Браслет из золота", 
+            price: "17 600 ₽", 
+            image: "images/13.jpg", 
+            url: "pr-card10.html", 
+            description: "Элегантный браслет из золота 585 пробы. Классический дизайн, можно носить самостоятельно или в паре с часами.",
+            keywords: ["браслет", "золото", "цепочка", "красное золото", "запястье"]
+        },
+        { 
+            name: "Серьги из золота с фианитами", 
+            price: "14 800 ₽", 
+            image: "images/16.jpg", 
+            url: "pr-card13.html", 
+            description: "Изысканные серьги из золота 585 пробы с фианитами. Удобные серьги-гвоздики для ежедневной носки.",
+            keywords: ["серьги", "золото", "фианит", "гвоздики", "повседневные"]
+        },
+        { 
+            name: "Кольцо из белого золота с сапфирами", 
+            price: "35 200 ₽", 
+            image: "images/17.jpg", 
+            url: "pr-card14.html", 
+            description: "Роскошное кольцо из белого золота 585 пробы с натуральными сапфирами. Классическая элегантность и благородство.",
+            keywords: ["кольцо", "белое золото", "сапфир", "драгоценный", "премиум"]
+        }
+    ];
+
+    // Функция поиска по названию, описанию и ключевым словам
+    function searchProducts(searchQuery) {
+        if (!searchQuery || searchQuery.trim() === '') {
+            return [];
+        }
+        
+        const lowerQuery = searchQuery.toLowerCase().trim();
+        const queryWords = lowerQuery.split(/\s+/).filter(word => word.length > 2);
+        
+        return products.filter(product => {
+            // Поиск по названию
+            if (product.name.toLowerCase().includes(lowerQuery)) return true;
+            
+            // Поиск по описанию
+            if (product.description && product.description.toLowerCase().includes(lowerQuery)) return true;
+            
+            // Поиск по ключевым словам
+            if (product.keywords && product.keywords.some(keyword => keyword.toLowerCase().includes(lowerQuery))) return true;
+            
+            // Поиск по отдельным словам (если запрос из нескольких слов)
+            if (queryWords.length > 1) {
+                let matchCount = 0;
+                for (const word of queryWords) {
+                    if (product.name.toLowerCase().includes(word)) matchCount++;
+                    else if (product.description && product.description.toLowerCase().includes(word)) matchCount++;
+                    else if (product.keywords && product.keywords.some(k => k.toLowerCase().includes(word))) matchCount++;
+                }
+                // Если совпало больше половины слов, считаем релевантным
+                if (matchCount >= Math.ceil(queryWords.length / 2)) return true;
+            }
+            
+            return false;
+        });
+    }
+
+    // Функция для подсветки совпадений в тексте
+    function highlightText(text, query) {
+        if (!text || !query) return text;
+        const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+        let result = text;
+        words.forEach(word => {
+            const regex = new RegExp(`(${word})`, 'gi');
+            result = result.replace(regex, `<span class="search-highlight">$1</span>`);
+        });
+        return result;
+    }
+
+    // Отображаем результаты
+    function displayResults(results, query) {
+        const resultsContainer = document.getElementById('searchResults');
+        const resultsCountSpan = document.getElementById('resultsCount');
+        
+        if (!resultsContainer) return;
+        
+        if (results.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="no-results">
+                    <p>😔 По запросу «${query}» ничего не найдено</p>
+                    <p class="suggestions">Попробуйте: 
+                        <br>• использовать более общие слова
+                        <br>• проверить написание
+                        <br>• поискать по категориям: серьги, кольца, колье, браслеты, броши
+                    </p>
+                </div>
+            `;
+            if (resultsCountSpan) resultsCountSpan.textContent = 'Найдено 0 товаров';
+            return;
+        }
+        
+        if (resultsCountSpan) {
+            const wordForm = results.length === 1 ? 'товар' : (results.length >= 2 && results.length <= 4 ? 'товара' : 'товаров');
+            resultsCountSpan.textContent = `Найдено ${results.length} ${wordForm}`;
+        }
+        
+        resultsContainer.innerHTML = results.map(product => {
+            let displayName = product.name;
+            let displayDesc = product.description;
+            
+            // Подсвечиваем совпадения, если поисковый запрос есть
+            if (query && query.trim()) {
+                displayName = highlightText(product.name, query);
+                if (displayDesc) displayDesc = highlightText(product.description, query);
+            }
+            
+            return `
+                <a href="${product.url}" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="product-card">
+                        <img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300x300?text=Фото'">
+                        <p class="name">${displayName}</p>
+                        <p class="price">${product.price}</p>
+                        ${displayDesc ? `<p style="font-size: 12px; color: #888; margin-top: 8px; line-height: 1.4;">${displayDesc.substring(0, 80)}${displayDesc.length > 80 ? '…' : ''}</p>` : ''}
+                    </div>
+                </a>
+            `;
+        }).join('');
+    }
+
+    // Получаем поисковый запрос из URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const query = urlParams.get('q');
+
+    // Отображаем запрос на странице
+    const searchQuerySpan = document.getElementById('searchQuery');
+    if (searchQuerySpan && query) {
+        searchQuerySpan.innerHTML = `<span class="search-highlight">${query}</span>`;
+    }
+
+    // Запускаем поиск при загрузке страницы
+    if (query) {
+        const results = searchProducts(query);
+        displayResults(results, query);
+    }
+
+    // Поиск на самой странице результатов
+    function performSearch() {
+        const input = document.getElementById('searchInput');
+        const newQuery = input.value.trim();
+        if (newQuery) {
+            window.location.href = `search-results.html?q=${encodeURIComponent(newQuery)}`;
+        } else {
+            alert('Введите поисковый запрос');
+        }
+    }
+
+    document.getElementById('searchBtn')?.addEventListener('click', performSearch);
+    document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') performSearch();
+    });
+</script>
+
+<!-- Футер -->
+<footer class="footer">
+    <div class="container footer-container">
+        <div class="footer-col newsletter">
+            <h3>ПОДПИШИТЕСЬ НА РАССЫЛКУ</h3>
+            <p>Чтобы первыми узнавать об эксклюзивных новинках и специальных предложениях</p>
+            <form class="subscribe-form">
+                <input type="email" placeholder="Ваш Email" required>
+                <button type="submit">Подписаться</button>
+            </form>
+            <p class="consent-text">Продолжая, вы даете согласие на обработку персональных данных</p>
+        </div>
+        <div class="footer-col">
+            <h3>ОБ Ange</h3>
+            <ul>
+                <li><a href="#">О магазине</a></li>
+                <li><a href="#">Бутики и ПВЗ</a></li>
+                <li><a href="#">Контакты</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h3>ОНЛАЙН ПОКУПКИ</h3>
+            <ul>
+                <li><a href="#">Вопросы и ответы</a></li>
+                <li><a href="#">Доставка</a></li>
+                <li><a href="#">Обмен и возврат</a></li>
+                <li><a href="#">Условия продажи</a></li>
+                <li><a href="#">Скидка на первый заказ</a></li>
+                <li><a href="#">Политика конфиденциальности</a></li>
+            </ul>
+        </div>
+        <div class="footer-col contacts-apps">
+            <h3>КОНТАКТЫ</h3>
+            <p class="phone">+7 ХХХ ХХХ-ХХ-ХХ</p>
+            <h3 class="apps-title">НАШЕ ПРИЛОЖЕНИЕ</h3>
+            <div class="app-links">
+                <a href="#" class="app-link">App Store</a>
+                <a href="#" class="app-link">Google Play</a>
+                <a href="#" class="app-link">AppGallery</a>
+            </div>
+            <div class="social">
+                <p>Мы в социальных сетях</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="VK">VK</a>
+                    <a href="#" aria-label="Telegram">TG</a>
+                </div>
+            </div>
+            <p class="country">Россия</p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container">
+            <p>© 2026 Ange Ювелирный магазин. Все права защищены.</p>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

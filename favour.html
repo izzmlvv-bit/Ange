@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Ange - Избранное</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="stylefavour.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="container">
+        <a href="index.html" class="logo" style="text-decoration: none; color: inherit;">
+            <img src="images/Ange.png" alt="Ange" style="height: 46px; width: auto; vertical-align: middle;">
+        </a>
+       <nav class="nav">
+    <div class="search-wrapper">
+        <input type="text" placeholder="Поиск..." class="search-input">
+        <button class="search-btn"><img src="images/лупа.png" alt=""></button>
+    </div>
+    <a href="#" class="catalog-link" onclick="openCatalogModal(); return false;">Каталог</a>
+    <a href="newpage.html" class="sale">Sale</a>
+    <a href="collections.html">Коллекции</a>
+    <a href="#" id="loginLink">Вход</a>
+    <a href="favour.html" class="favorites-link" style="position: relative; text-decoration: none;">
+        <img src="images/избранное.png" alt="Избранное" style="width: 20px; height: 20px;">
+        <span id="favoritesCount" class="favorites-count" style="display: none;">0</span>
+    </a>
+    <a href="korzina1.html"><img src="images/Корзина.png" alt="Корзина"></a>
+</nav>
+    </div>
+</header>
+
+<main class="favorites-main">
+    <h1 class="favorites-title">Избранное</h1>
+    
+    <div id="favoritesContainer">
+        <!-- Товары будут загружены динамически -->
+    </div>
+</main>
+
+<script>
+    // === РАБОТА С ИЗБРАННЫМ ===
+    
+    function loadFavorites() {
+        const saved = localStorage.getItem('angeFavorites');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch(e) {
+                return [];
+            }
+        }
+        return [];
+    }
+    
+    function saveFavorites(favorites) {
+        localStorage.setItem('angeFavorites', JSON.stringify(favorites));
+    }
+    
+    function addToFavorites(product) {
+        let favorites = loadFavorites();
+        const exists = favorites.some(item => item.id === product.id);
+        
+        if (!exists) {
+            favorites.push(product);
+            saveFavorites(favorites);
+            alert('Товар добавлен в избранное ❤️');
+        } else {
+            alert('Товар уже в избранном');
+        }
+    }
+    
+    function removeFromFavorites(id) {
+    let favorites = loadFavorites();
+    favorites = favorites.filter(item => item.id !== id);
+    saveFavorites(favorites);
+    renderFavorites();
+    updateFavoritesCount(); // обновляем счётчик
+}
+    
+    function renderFavorites() {
+    const container = document.getElementById('favoritesContainer');
+    const favorites = loadFavorites();
+    
+    if (!container) return;
+    
+    if (favorites.length === 0) {
+        container.innerHTML = `
+            <div class="empty-favorites">
+                <p class="empty-favorites-message">
+                    В избранном пока ничего нет.<br>
+                    Добавляйте понравившиеся украшения, чтобы не потерять их.
+                </p>
+                <a href="index.html" class="btn-catalog">В каталог →</a>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="favorites-grid">
+            ${favorites.map(item => `
+                <div class="favorite-card" data-id="${item.id}">
+                    <button class="remove-favorite" onclick="removeFromFavorites(${item.id})" title="Удалить из избранного">✕</button>
+                    <a href="${item.url}" style="text-decoration: none; color: inherit;">
+                        <img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/300x300?text=Фото'">
+                        <p class="favorite-name">${item.name}</p>
+                        <div class="favorite-price-wrapper">
+                            ${item.oldPrice ? `<span class="favorite-old-price">${item.oldPrice.toLocaleString()} ₽</span>` : ''}
+                            <span class="favorite-price ${item.oldPrice ? 'sale-price' : ''}">${item.price.toLocaleString()} ₽</span>
+                        </div>
+                    </a>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+    
+    function searchSite() {
+        let query = document.getElementById('searchInput')?.value;
+        if (query && query.trim() !== '') {
+            window.location.href = 'search-results.html?q=' + encodeURIComponent(query.trim());
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        renderFavorites();
+        
+        const btn = document.querySelector('.search-btn');
+        const input = document.getElementById('searchInput');
+        if (btn) btn.addEventListener('click', searchSite);
+        if (input) {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') searchSite();
+            });
+        }
+    });
+</script>
+
+<!-- Модальное окно каталога -->
+<div id="catalogModal" class="catalog-modal">
+    <div class="catalog-modal-content">
+        <div class="catalog-modal-header">
+            <h2>Каталог</h2>
+            <span class="catalog-modal-close">&times;</span>
+        </div>
+        <div class="catalog-modal-body">
+            <div class="catalog-categories">
+                <a href="catalog-rings.html" class="catalog-category">Кольца</a>
+                <a href="catalog-earrings.html" class="catalog-category">Серьги</a>
+                <a href="catalog-bracelets.html" class="catalog-category">Браслеты</a>
+                <a href="catalog-necklaces.html" class="catalog-category">Колье</a>
+                <a href="catalog-brooches.html" class="catalog-category">Броши</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно входа -->
+<div id="loginModal" class="login-modal">
+    <div class="login-modal-content">
+        <div class="login-modal-header">
+            <h2>Вход</h2>
+            <span class="login-modal-close">&times;</span>
+        </div>
+        <div class="login-modal-body">
+            <form id="loginForm">
+                <div class="login-form-group">
+                    <label for="phone">Телефон</label>
+                    <div class="phone-input-wrapper">
+                        <span class="phone-prefix">+7</span>
+                        <input type="tel" id="phone" name="phone" placeholder="XXX XXX-XX-XX" class="phone-input">
+                    </div>
+                </div>
+                <button type="submit" class="login-btn">Получить код</button>
+                <button type="button" class="continue-btn" id="continueWithoutLogin">Продолжить без входа →</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="container footer-container">
+        <div class="footer-col newsletter">
+            <h3>ПОДПИШИТЕСЬ НА РАССЫЛКУ</h3>
+            <p>Чтобы первыми узнавать об эксклюзивных новинках и специальных предложениях</p>
+            <form class="subscribe-form">
+                <input type="email" placeholder="Ваш Email" required>
+                <button type="submit">Подписаться</button>
+            </form>
+            <p class="consent-text">Продолжая, вы даете согласие на обработку персональных данных</p>
+        </div>
+        <div class="footer-col">
+            <h3>ОБ Ange</h3>
+            <ul>
+                <li><a href="#">О магазине</a></li>
+                <li><a href="#">Бутики и ПВЗ</a></li>
+                <li><a href="#">Контакты</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h3>ОНЛАЙН ПОКУПКИ</h3>
+            <ul>
+                <li><a href="#">Вопросы и ответы</a></li>
+                <li><a href="#">Доставка</a></li>
+                <li><a href="#">Обмен и возврат</a></li>
+                <li><a href="#">Условия продажи</a></li>
+                <li><a href="#">Скидка на первый заказ</a></li>
+                <li><a href="#">Политика конфиденциальности</a></li>
+            </ul>
+        </div>
+        <div class="footer-col contacts-apps">
+            <h3>КОНТАКТЫ</h3>
+            <p class="phone">+7 ХХХ ХХХ-ХХ-ХХ</p>
+            <h3 class="apps-title">НАШЕ ПРИЛОЖЕНИЕ</h3>
+            <div class="app-links">
+                <a href="#" class="app-link">App Store</a>
+                <a href="#" class="app-link">Google Play</a>
+                <a href="#" class="app-link">AppGallery</a>
+            </div>
+            <div class="social">
+                <p>Мы в социальных сетях</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="VK">VK</a>
+                    <a href="#" aria-label="Telegram">TG</a>
+                </div>
+            </div>
+            <p class="country">Россия</p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container">
+            <p>© 2026 Ange Ювелирный магазин. Все права защищены.</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+    function openCatalogModal() {
+        const modal = document.getElementById('catalogModal');
+        if (modal) modal.style.display = 'flex';
+    }
+    
+    function closeCatalogModal() {
+        const modal = document.getElementById('catalogModal');
+        if (modal) modal.style.display = 'none';
+    }
+    
+    document.querySelector('.catalog-link')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        openCatalogModal();
+    });
+    document.querySelector('.catalog-modal-close')?.addEventListener('click', closeCatalogModal);
+    document.getElementById('catalogModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeCatalogModal();
+    });
+    
+    const loginModal = document.getElementById('loginModal');
+    const loginLink = document.getElementById('loginLink');
+    const loginCloseBtn = document.querySelector('.login-modal-close');
+    const loginFormElem = document.getElementById('loginForm');
+    const continueWithoutLoginBtn = document.getElementById('continueWithoutLogin');
+    
+    if (loginLink) {
+        loginLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (loginModal) loginModal.style.display = 'flex';
+        });
+    }
+    if (loginCloseBtn) {
+        loginCloseBtn.addEventListener('click', function() {
+            if (loginModal) loginModal.style.display = 'none';
+        });
+    }
+    if (loginModal) {
+        loginModal.addEventListener('click', function(e) {
+            if (e.target === loginModal) loginModal.style.display = 'none';
+        });
+    }
+    if (loginFormElem) {
+        loginFormElem.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const phone = document.getElementById('phone')?.value.trim();
+            if (!phone) {
+                alert('Пожалуйста, введите номер телефона');
+                return;
+            }
+            alert(`Код подтверждения отправлен на номер +7 ${phone}`);
+            if (loginModal) loginModal.style.display = 'none';
+            loginFormElem.reset();
+        });
+    }
+    if (continueWithoutLoginBtn) {
+        continueWithoutLoginBtn.addEventListener('click', function() {
+            if (loginModal) loginModal.style.display = 'none';
+        });
+    }
+    // === СЧЁТЧИК ИЗБРАННОГО ===
+function updateFavoritesCount() {
+    const favorites = JSON.parse(localStorage.getItem('angeFavorites') || '[]');
+    const count = favorites.length;
+    const countElement = document.getElementById('favoritesCount');
+    
+    if (countElement) {
+        if (count > 0) {
+            countElement.textContent = count;
+            countElement.style.display = 'flex';
+        } else {
+            countElement.style.display = 'none';
+        }
+    }
+}
+
+// Вызываем обновление счётчика при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    updateFavoritesCount();
+});
+</script>
+
+</body>
+</html>

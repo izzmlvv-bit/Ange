@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Ange - Корзина</title>
+    <link rel="stylesheet" href="stylekorzina1.css">
+</head>
+<body>
+ <header class="header">
+    <div class="container">
+        <a href="index.html" class="logo">
+            <img src="images/Ange.png" alt="Ange">
+        </a>
+        <nav class="nav">
+            <div class="search-wrapper">
+                <input type="text" placeholder="Поиск..." class="search-input" id="searchInput">
+                <button class="search-btn">
+                    <img src="images/лупа.png" alt="Поиск">
+                </button>
+            </div>
+            <a href="#" class="catalog-link">Каталог</a>
+            <a href="newpage.html" class="sale">Sale</a>
+            <a href="collections.html">Коллекции</a>
+            <a href="#" id="loginLink">Вход</a>
+            <a href="favour.html" class="favorites-link">
+                <img src="images/избранное.png" alt="Избранное">
+                <span id="favoritesCount" class="favorites-count">0</span>
+            </a>
+            <a href="korzina1.html" class="cart-link">
+                <img src="images/Корзина.png" alt="Корзина">
+            </a>
+        </nav>
+    </div>
+</header>
+
+<main class="cart-main">
+    <h1 class="cart-title">Корзина</h1>
+
+    <div id="cartWithItems" class="cart-with-items">
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Размер</th>
+                    <th>Цена</th>
+                    <th>Количество</th>
+                    <th>Сумма</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="cartItems"></tbody>
+        </table>
+        <div class="cart-summary">
+            <div class="summary-card">
+                <div class="summary-row">
+                    <span>Товары (<span id="itemsCount">0</span> шт.)</span>
+                </div>
+                <div class="summary-row">
+                    <span>Скидка</span>
+                    <span>0 ₽</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Итого</span>
+                    <span id="totalPrice" class="total-price">0 ₽</span>
+                </div>
+                <button class="checkout-btn" id="checkoutBtn">Оформить заказ →</button>
+            </div>
+        </div>
+        <a href="index.html" class="continue-shopping">← Продолжить покупки</a>
+    </div>
+
+    <div id="emptyCart" class="empty-cart" style="display: none;">
+        <p class="empty-cart-message">
+            В корзине пока ничего нет.<br>
+            Загляните в наш каталог — там вас ждут украшения, созданные, чтобы сиять.
+        </p>
+        <a href="index.html" class="btn-catalog">В каталог →</a>
+        <a href="index.html" class="continue-link">← Продолжить покупки</a>
+    </div>
+</main>
+
+<script>
+    // === КОРЗИНА ===
+    let cart = [];
+
+    function loadCart() {
+        const saved = localStorage.getItem('angeCart');
+        if (saved) {
+            try {
+                cart = JSON.parse(saved);
+                if (!Array.isArray(cart)) cart = [];
+            } catch(e) {
+                cart = [];
+            }
+        } else {
+            cart = [];
+        }
+        renderCart();
+    }
+
+    function saveCart() {
+        localStorage.setItem('angeCart', JSON.stringify(cart));
+    }
+
+    function renderCart() {
+        const cartWithItems = document.getElementById('cartWithItems');
+        const emptyCartDiv = document.getElementById('emptyCart');
+        const tbody = document.getElementById('cartItems');
+        const itemsCountSpan = document.getElementById('itemsCount');
+        const totalPriceSpan = document.getElementById('totalPrice');
+        
+        if (!tbody) return;
+        
+        if (cart.length === 0) {
+            if (cartWithItems) cartWithItems.style.display = 'none';
+            if (emptyCartDiv) emptyCartDiv.style.display = 'block';
+            return;
+        }
+        
+        if (cartWithItems) cartWithItems.style.display = 'block';
+        if (emptyCartDiv) emptyCartDiv.style.display = 'none';
+        
+        let totalItems = 0;
+        let totalSum = 0;
+        
+       tbody.innerHTML = cart.map((item, idx) => {
+    const itemTotal = item.price * item.quantity;
+    totalItems += item.quantity;
+    totalSum += itemTotal;
+    const sizeDisplay = (item.size && item.size !== 'null' && item.size !== 'undefined') ? item.size : '—';
+    const sizeValue = item.size || '';
+    
+    return `
+        <tr>
+            <td class="cart-product-cell">
+                <div class="cart-product-info">
+                    <img class="cart-product-image" src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/80x80?text=Фото'">
+                    <a href="${item.url}" class="cart-product-name">${item.name}</a>
+                </div>
+            </td>
+            <td class="cart-product-size">${sizeDisplay}</td>
+            <td class="cart-product-price">
+                ${item.oldPrice ? `<span class="cart-old-price">${item.oldPrice.toLocaleString()} ₽</span>` : ''}
+                <span class="cart-current-price ${item.oldPrice ? 'sale-cart-price' : ''}">${item.price.toLocaleString()} ₽</span>
+            </td>
+            <td class="cart-quantity-cell">
+                <div class="cart-quantity">
+                    <button class="quantity-btn" data-idx="${idx}" data-delta="-1">−</button>
+                    <span class="quantity-value">${item.quantity}</span>
+                    <button class="quantity-btn" data-idx="${idx}" data-delta="1">+</button>
+                </div>
+            </td>
+            <td class="cart-product-total">${itemTotal.toLocaleString()} ₽</td>
+            <td class="cart-remove-cell">
+                <button class="remove-btn" data-idx="${idx}" title="Удалить">✕</button>
+            </td>
+        </tr>
+    `;
+}).join('');
+        
+        itemsCountSpan.textContent = totalItems;
+        totalPriceSpan.textContent = totalSum.toLocaleString() + ' ₽';
+        saveCart();
+        
+        // Привязываем обработчики
+        document.querySelectorAll('.quantity-btn').forEach(btn => {
+            btn.onclick = function() {
+                const idx = parseInt(this.dataset.idx);
+                const delta = parseInt(this.dataset.delta);
+                if (!isNaN(idx) && cart[idx]) {
+                    const newQuantity = cart[idx].quantity + delta;
+                    if (newQuantity >= 1) {
+                        cart[idx].quantity = newQuantity;
+                    } else {
+                        cart.splice(idx, 1);
+                    }
+                    renderCart();
+                }
+            };
+        });
+        
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+            btn.onclick = function() {
+                const idx = parseInt(this.dataset.idx);
+                if (!isNaN(idx)) {
+                    cart.splice(idx, 1);
+                    renderCart();
+                }
+            };
+        });
+    }
+
+    function checkout() {
+        if (cart.length === 0) {
+            alert('Ваша корзина пуста');
+            return;
+        }
+        const modal = document.getElementById('orderModal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('orderModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function handleOrderSubmit(event) {
+        event.preventDefault();
+        const fullname = document.getElementById('fullname').value;
+        const email = document.getElementById('email').value;
+        const address = document.getElementById('address').value;
+        
+        if (!fullname || !email || !address) {
+            alert('Пожалуйста, заполните все обязательные поля');
+            return;
+        }
+        
+        alert(`Спасибо, ${fullname}!\nЗаказ оформлен.\nСсылка на оплату отправлена на ${email}`);
+        cart = [];
+        saveCart();
+        renderCart();
+        closeModal();
+        document.getElementById('orderForm').reset();
+    }
+
+    function initModal() {
+        const modal = document.getElementById('orderModal');
+        const closeBtn = document.querySelector('.order-modal-close');
+        const form = document.getElementById('orderForm');
+        if (closeBtn) closeBtn.onclick = closeModal;
+        if (form) form.onsubmit = handleOrderSubmit;
+        if (modal) modal.onclick = function(e) { if (e.target === modal) closeModal(); };
+    }
+
+    function searchSite() {
+        let query = document.getElementById('searchInput')?.value;
+        if (query && query.trim() !== '') {
+            window.location.href = 'search-results.html?q=' + encodeURIComponent(query.trim());
+        }
+    }
+
+    // === МОДАЛЬНОЕ ОКНО КАТАЛОГА ===
+    function openCatalogModal() {
+        const modal = document.getElementById('catalogModal');
+        if (modal) modal.style.display = 'flex';
+    }
+    function closeCatalogModal() {
+        const modal = document.getElementById('catalogModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    // === МОДАЛЬНОЕ ОКНО ВХОДА ===
+    function openLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) modal.style.display = 'flex';
+    }
+    function closeLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) modal.style.display = 'none';
+    }
+    function initLoginModal() {
+        const modal = document.getElementById('loginModal');
+        const closeBtn = document.querySelector('.login-modal-close');
+        const loginLink = document.getElementById('loginLink');
+        const loginForm = document.getElementById('loginForm');
+        const continueBtn = document.getElementById('continueWithoutLogin');
+        if (loginLink) loginLink.onclick = function(e) { e.preventDefault(); openLoginModal(); };
+        if (closeBtn) closeBtn.onclick = closeLoginModal;
+        if (modal) modal.onclick = function(e) { if (e.target === modal) closeLoginModal(); };
+        if (loginForm) {
+            loginForm.onsubmit = function(e) {
+                e.preventDefault();
+                const phone = document.getElementById('phone')?.value.trim();
+                if (!phone) { alert('Пожалуйста, введите номер телефона'); return; }
+                alert(`Код подтверждения отправлен на номер +7 ${phone}`);
+                closeLoginModal();
+                loginForm.reset();
+            };
+        }
+        if (continueBtn) continueBtn.onclick = closeLoginModal;
+    }
+
+    // === СЧЁТЧИК ИЗБРАННОГО ===
+    function updateFavoritesCount() {
+        const favorites = JSON.parse(localStorage.getItem('angeFavorites') || '[]');
+        const count = favorites.length;
+        const el = document.getElementById('favoritesCount');
+        if (el) {
+            if (count > 0) {
+                el.textContent = count;
+                el.style.display = 'flex';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+    }
+
+    // === ИНИЦИАЛИЗАЦИЯ ===
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCart();
+        initModal();
+        initLoginModal();
+        updateFavoritesCount();
+        
+        // Поиск
+        const searchBtn = document.querySelector('.search-btn');
+        const searchInput = document.getElementById('searchInput');
+        if (searchBtn) searchBtn.onclick = searchSite;
+        if (searchInput) searchInput.onkeypress = function(e) { if (e.key === 'Enter') searchSite(); };
+        
+        // Каталог
+        const catalogLinks = document.querySelectorAll('.catalog-link');
+        const catalogModal = document.getElementById('catalogModal');
+        const catalogClose = document.querySelector('.catalog-modal-close');
+        catalogLinks.forEach(link => { link.onclick = function(e) { e.preventDefault(); openCatalogModal(); }; });
+        if (catalogClose) catalogClose.onclick = closeCatalogModal;
+        if (catalogModal) catalogModal.onclick = function(e) { if (e.target === catalogModal) closeCatalogModal(); };
+        
+        // Кнопка оформления заказа
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        if (checkoutBtn) checkoutBtn.onclick = checkout;
+        
+        // ESC для каталога
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const catalog = document.getElementById('catalogModal');
+                if (catalog && catalog.style.display === 'flex') closeCatalogModal();
+                const login = document.getElementById('loginModal');
+                if (login && login.style.display === 'flex') closeLoginModal();
+                const order = document.getElementById('orderModal');
+                if (order && order.style.display === 'flex') closeModal();
+            }
+        });
+    });
+</script>
+
+<!-- Модальное окно оформления заказа -->
+<div id="orderModal" class="order-modal">
+    <div class="order-modal-content">
+        <div class="order-modal-header">
+            <h2>Оформление заказа</h2>
+            <span class="order-modal-close">&times;</span>
+        </div>
+        <div class="order-modal-body">
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="fullname">ФИО</label>
+                    <input type="text" id="fullname" placeholder="Введите ваше ФИО" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Почта</label>
+                    <input type="email" id="email" placeholder="example@mail.ru" required>
+                </div>
+                <div class="form-group">
+                    <label for="address">Адрес доставки</label>
+                    <input type="text" id="address" placeholder="Город, улица, дом, квартира" required>
+                </div>
+                <div class="form-group">
+                    <label for="payment">Способ оплаты</label>
+                    <select id="payment">
+                        <option value="card">Банковская карта</option>
+                        <option value="sbp">СБП</option>
+                        <option value="cash">Наличные при получении</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="comment">Комментарий к заказу (необязательно)</label>
+                    <textarea id="comment" rows="3" placeholder="Ваши пожелания..."></textarea>
+                </div>
+                <button type="submit" class="submit-order-btn">Получить ссылку на оплату →</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно каталога -->
+<div id="catalogModal" class="catalog-modal">
+    <div class="catalog-modal-content">
+        <div class="catalog-modal-header">
+            <h2>Каталог</h2>
+            <span class="catalog-modal-close">&times;</span>
+        </div>
+        <div class="catalog-modal-body">
+            <div class="catalog-categories">
+                <a href="catalog-rings.html" class="catalog-category">Кольца</a>
+                <a href="catalog-earrings.html" class="catalog-category">Серьги</a>
+                <a href="catalog-bracelets.html" class="catalog-category">Браслеты</a>
+                <a href="catalog-necklaces.html" class="catalog-category">Колье</a>
+                <a href="catalog-brooches.html" class="catalog-category">Броши</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно входа -->
+<div id="loginModal" class="login-modal">
+    <div class="login-modal-content">
+        <div class="login-modal-header">
+            <h2>Вход</h2>
+            <span class="login-modal-close">&times;</span>
+        </div>
+        <div class="login-modal-body">
+            <form id="loginForm">
+                <div class="login-form-group">
+                    <label for="phone">Телефон</label>
+                    <div class="phone-input-wrapper">
+                        <span class="phone-prefix">+7</span>
+                        <input type="tel" id="phone" placeholder="XXX XXX-XX-XX" class="phone-input">
+                    </div>
+                </div>
+                <button type="submit" class="login-btn">Получить код</button>
+                <button type="button" class="continue-btn" id="continueWithoutLogin">Продолжить без входа →</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="container footer-container">
+        <div class="footer-col newsletter">
+            <h3>ПОДПИШИТЕСЬ НА РАССЫЛКУ</h3>
+            <p>Чтобы первыми узнавать об эксклюзивных новинках и специальных предложениях</p>
+            <form class="subscribe-form">
+                <input type="email" placeholder="Ваш Email" required>
+                <button type="submit">Подписаться</button>
+            </form>
+            <p class="consent-text">Продолжая, вы даете согласие на обработку персональных данных</p>
+        </div>
+        <div class="footer-col">
+            <h3>ОБ Ange</h3>
+            <ul>
+                <li><a href="#">О магазине</a></li>
+                <li><a href="#">Бутики и ПВЗ</a></li>
+                <li><a href="#">Контакты</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h3>ОНЛАЙН ПОКУПКИ</h3>
+            <ul>
+                <li><a href="#">Вопросы и ответы</a></li>
+                <li><a href="#">Доставка</a></li>
+                <li><a href="#">Обмен и возврат</a></li>
+                <li><a href="#">Условия продажи</a></li>
+                <li><a href="#">Скидка на первый заказ</a></li>
+                <li><a href="#">Политика конфиденциальности</a></li>
+            </ul>
+        </div>
+        <div class="footer-col contacts-apps">
+            <h3>КОНТАКТЫ</h3>
+            <p class="phone">+7 ХХХ ХХХ-ХХ-ХХ</p>
+            <h3 class="apps-title">НАШЕ ПРИЛОЖЕНИЕ</h3>
+            <div class="app-links">
+                <a href="#" class="app-link">App Store</a>
+                <a href="#" class="app-link">Google Play</a>
+                <a href="#" class="app-link">AppGallery</a>
+            </div>
+            <div class="social">
+                <p>Мы в социальных сетях</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="VK">VK</a>
+                    <a href="#" aria-label="Telegram">TG</a>
+                </div>
+            </div>
+            <p class="country">Россия</p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div class="container">
+            <p>© 2026 Ange Ювелирный магазин. Все права защищены.</p>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
